@@ -38,8 +38,11 @@ public class EmployeeController {
     }
 
     /**
-     * Recupera el listado de empleados paginados.
-     * Permite incluir empleados inactivos mediante el parámetro includeInactive.
+     * Devuelve la lista de empleados de forma paginada.
+     * Con el parámetro includeInactive podemos elegir si queremos ver también a los que ya no están.
+     * @param pageable Configuración de la página (tamaño, orden, etc).
+     * @param includeInactive Si queremos incluir empleados que ya no están activos.
+     * @return Página con los datos de los empleados.
      */
     @GetMapping
     @Operation(summary = "Listado paginado de empleados")
@@ -75,7 +78,10 @@ public class EmployeeController {
         return employeeService.updateEmployee(id, dto);
     }
 
-    /** Realiza la baja lógica de un empleado en el sistema. */
+    /**
+     * Da de baja a un empleado (baja lógica).
+     * El empleado no se borra de la base de datos, solo se le pone una fecha de fin de contrato.
+     */
     @DeleteMapping("/{id}")
     @ResponseStatus(HttpStatus.NO_CONTENT)
     @Operation(summary = "Baja lógica de empleado")

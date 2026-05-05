@@ -40,11 +40,13 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Object> handleValidationException(MethodArgumentNotValidException ex,
             HttpServletRequest request) {
-        String message = ex.getBindingResult().getFieldErrors().stream()
-                .map(error -> error.getField() + ": " + error.getDefaultMessage())
-                .findFirst()
-                .orElse("Datos de entrada inválidos");
-        return buildResponse(HttpStatus.BAD_REQUEST, message, request);
+        Map<String, String> fieldErrors = new LinkedHashMap<>();
+        ex.getBindingResult().getFieldErrors().forEach(error -> 
+            fieldErrors.put(error.getField(), error.getDefaultMessage())
+        );
+
+        String message = "Existen errores de validación en el formulario";
+        return buildResponse(HttpStatus.BAD_REQUEST, message, request, fieldErrors);
     }
 
     /** JSON malformado o tipo no parseable en el cuerpo de la petición. */
@@ -88,12 +90,19 @@ public class GlobalExceptionHandler {
 
     private ResponseEntity<Object> buildResponse(HttpStatus status, String message,
             HttpServletRequest request) {
+        return buildResponse(status, message, request, null);
+    }
+
+    private ResponseEntity<Object> buildResponse(HttpStatus status, String message,
+            HttpServletRequest request, Map<String, String> errors) {
         Map<String, Object> body = new LinkedHashMap<>();
-        // El .toString() es el "truco" para que Jackson no se rompa
         body.put("timestamp", LocalDateTime.now().toString());
         body.put("status", status.value());
         body.put("error", status.getReasonPhrase());
         body.put("message", message);
+        if (errors != null) {
+            body.put("errors", errors);
+        }
         body.put("path", request.getRequestURI());
         return new ResponseEntity<>(body, status);
     }

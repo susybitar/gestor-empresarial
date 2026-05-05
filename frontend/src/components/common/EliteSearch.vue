@@ -38,28 +38,28 @@ const isFocused = ref(false)
 .elite-search-wrapper {
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0px; /* Sin padding lateral para que sea camaleón total */
+  gap: 8px;
+  padding: 4px 0px; /* Ultra fino */
   background: transparent;
-  border-bottom: 1px solid transparent; /* Borde invisible por defecto */
-  width: 250px;
-  transition: all 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+  border-bottom: 1px solid transparent; 
+  width: 180px; /* Más estrecho */
+  transition: all 0.4s cubic-bezier(0.2, 0.8, 0.2, 1);
   position: relative;
 }
 
 /* Efecto Camaleón en Foco */
 .elite-search-wrapper.is-focused {
-  width: 320px; /* Ancho más contenido */
-  padding: 8px 16px;
-  background: rgba(255, 255, 255, 0.03);
+  width: 240px; /* Crecimiento contenido */
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.02);
   backdrop-filter: blur(4px);
-  border-radius: 99px;
-  border: 1px solid rgba(30, 64, 175, 0.2);
+  border-radius: 12px; /* Más suave, alineado con el resto de la app */
+  border: 1px solid rgba(30, 64, 175, 0.1);
 }
 
 .search-icon {
-  width: 18px;
-  height: 18px;
+  width: 12px;
+  height: 12px;
   color: #94A3B8;
   transition: all 0.3s;
 }
@@ -73,14 +73,16 @@ const isFocused = ref(false)
   background: none;
   border: none;
   outline: none;
-  font-size: 14px;
-  font-weight: 500;
-  color: #0F172A;
+  font-size: 12px;
+  font-weight: 300;
+  color: #475569;
+  letter-spacing: 0.01em;
 }
 
 .elite-search-input::placeholder {
-  color: #CBD5E1;
-  font-weight: 400;
+  color: #94A3B8;
+  font-weight: 300;
+  letter-spacing: 0.02em;
 }
 
 /* Botón X Minimalista SIN CÍRCULO */

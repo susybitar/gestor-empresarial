@@ -8,6 +8,7 @@
         <button 
           class="btn-f-base btn-f-text"
           @click="$router.push('/projects')"
+          style="margin: 0; padding: 4px 12px;"
         >
           Volver
         </button>
@@ -17,19 +18,19 @@
     <div class="profile-grid">
       <!-- PANEL LATERAL DE IDENTIDAD -->
       <aside class="profile-aside">
-        <div class="identity-block-minimal animate-in">
+        <div class="identity-block-minimal">
           <div class="identity-text">
             <span class="text-label text-uppercase">Resumen de Asignación</span>
           </div>
           
           <div class="aside-stats-stack">
             <div class="aside-stat-item">
-              <span class="text-label">Personal Asignado</span>
-              <span class="text-primary f-tabular">{{ assignedCount }}</span>
+              <span class="stat-label">Personal Asignado</span>
+              <span class="stat-value-aside f-tabular">{{ assignedCount }}</span>
             </div>
             <div class="aside-stat-item">
-              <span class="text-label">Proyecto Seleccionado</span>
-              <span class="text-primary f-tabular" style="font-size: 14px; line-height: 1.2;">
+              <span class="stat-label">Proyecto Seleccionado</span>
+              <span class="stat-value-aside" style="font-size: 14px; line-height: 1.2; display: block; margin-top: 4px;">
                 {{ selectedProjectLabel || 'Ninguno' }}
               </span>
             </div>
@@ -41,34 +42,49 @@
       <main class="profile-main-list">
         <!-- ÁREA DE CONTROL INTEGRADA -->
         <div class="control-area-elite animate-in delay-1">
-          <div class="search-group">
-            <EliteSearch v-model="search" placeholder="Filtrar empleados por nombre o NIF..." />
-          </div>
-          
-          <div class="project-selector-wrapper">
-            <v-select
-              v-model="selectedProject"
-              :items="projects"
-              item-title="description"
-              item-value="idProject"
-              label="Seleccionar Proyecto Estratégico"
-              variant="outlined"
-              density="comfortable"
-              hide-details
-              prepend-inner-icon="mdi-briefcase-outline"
-              @update:model-value="fetchAssignments"
-              class="elite-select-naked"
-            />
+          <div class="f-form-grid" style="grid-template-columns: 1.5fr 1fr; gap: 24px;">
+            <div class="project-selector-wrapper">
+              <div class="f-input-group">
+                <label class="text-label mb-1 d-block">Proyectos</label>
+                <div class="f-input-wrapper" :class="{ 'is-open': showProjectSelector }" @click="showProjectSelector = !showProjectSelector" v-click-outside="() => showProjectSelector = false">
+                  <Briefcase class="input-icon" />
+                  <div class="f-select-display" :class="{ 'is-placeholder': !selectedProject }">{{ selectedProjectLabel || 'Seleccionar proyecto' }}</div>
+                  <transition name="fade-glass">
+                    <div v-if="showProjectSelector" class="f-dropdown-glass">
+                      <div class="select-option" @click.stop="clearProjectSelection">Ningún proyecto</div>
+                      <div v-for="item in projects" :key="item.idProject" class="select-option" @click.stop="selectProjectItem(item)">{{ item.description }}</div>
+                    </div>
+                  </transition>
+                </div>
+              </div>
+            </div>
+
+            <!-- FILTRO DE ESTADO COMPACTO -->
+            <div class="filter-wrapper" v-if="selectedProject">
+              <div class="f-input-group">
+                <label class="text-label mb-1 d-block">Filtrar por estado</label>
+                <v-select
+                  v-model="filterStatus"
+                  :items="['Todos', 'Asignados', 'No asignados']"
+                  density="compact"
+                  variant="plain"
+                  hide-details
+                  class="f-vselect-custom"
+                />
+              </div>
+            </div>
           </div>
         </div>
 
         <!-- LISTA NAKED CRYSTAL (Igual que empleados) -->
         <div class="naked-list-container animate-in delay-2">
-          <!-- Cabecera de la lista -->
           <div class="list-header-minimal assignment-grid px-8 pb-4">
-            <div class="text-label">Información de Empleado</div>
-            <div class="text-label text-right">NIF / NIE</div>
-            <div class="text-label"></div>
+            <EliteSortLink 
+              label="EMPLEADO" 
+              :active="sortBy === 'name'" 
+              :sortDesc="sortOrder === 'desc'" 
+              @toggle="toggleSort('name')" 
+            />
           </div>
 
           <div v-if="!selectedProject" class="empty-state-elite">
@@ -76,6 +92,11 @@
               <FileText class="empty-icon" />
             </div>
             <p>Selecciona un proyecto para gestionar el equipo</p>
+          </div>
+
+          <div v-else-if="loading" class="empty-state-elite">
+            <RefreshCw class="icon-md spin mb-4" />
+            <p>Cargando asignaciones...</p>
           </div>
 
           <div v-else class="list-body">
@@ -89,15 +110,20 @@
                 <span class="text-secondary">{{ item.email }}</span>
               </div>
 
-              <div class="text-secondary text-right f-tabular">{{ item.nif }}</div>
 
-              <div class="d-flex justify-center">
-                <v-checkbox-btn
-                  :model-value="item.assigned"
-                  :loading="processingId === item.idEmployee"
-                  color="primary"
-                  @update:model-value="(val) => toggleAssignment(item, val)"
-                />
+              <div class="d-flex justify-end align-center pr-5" style="justify-self: end;">
+                <button 
+                  class="crystal-action-pill" 
+                  :class="{ 'is-active': item.assigned, 'is-loading': processingId === item.idEmployee }"
+                  @click="toggleAssignment(item, !item.assigned)"
+                >
+                  <span v-if="item.assigned" class="pill-content">
+                    <Check class="pill-icon" /> ASIGNADO
+                  </span>
+                  <span v-else class="pill-content">
+                    <Plus class="pill-icon" /> ASIGNAR
+                  </span>
+                </button>
               </div>
             </div>
           </div>
@@ -109,45 +135,84 @@
 
 <script setup>
 import { ref, reactive, onMounted, computed } from "vue";
-import { FileText, Briefcase, Users, ChevronDown } from 'lucide-vue-next';
-import EliteSearch from '@/components/common/EliteSearch.vue';
-import api from "@/plugins/axios";
+import { FileText, Briefcase, Check, Plus, RefreshCw } from 'lucide-vue-next';
+import EliteSortLink from '@/components/common/EliteSortLink.vue';
+import { projectService } from '@/services/projectService';
+import { assignmentService } from '@/services/assignmentService';
 import { toast } from '@/services/toastService';
 
 const loading = ref(false);
-const search = ref('');
+const sortBy = ref('name');
+const sortOrder = ref('asc');
 const processingId = ref(null);
 const projects = ref([]);
 const assignments = ref([]); 
 const selectedProject = ref(null);
+const showProjectSelector = ref(false);
+const filterStatus = ref('Todos');
+
+const toggleSort = (field) => {
+  if (sortBy.value === field) {
+    sortOrder.value = sortOrder.value === 'asc' ? 'desc' : 'asc';
+  } else {
+    sortBy.value = field;
+    sortOrder.value = 'asc';
+  }
+};
+
+const selectProjectItem = (item) => {
+  selectedProject.value = item.idProject;
+  showProjectSelector.value = false;
+  filterStatus.value = 'Todos';
+  fetchAssignments();
+};
+
+const clearProjectSelection = () => {
+  selectedProject.value = null;
+  assignments.value = [];
+  showProjectSelector.value = false;
+  filterStatus.value = 'Todos';
+};
 
 const assignedCount = computed(() => assignments.value.filter(a => a.assigned).length);
 const selectedProjectLabel = computed(() => projects.value.find(p => p.idProject === selectedProject.value)?.description);
 
+/**
+ * Filtra y ordena la lista de empleados según lo que hayamos seleccionado en los filtros.
+ */
 const filteredAssignments = computed(() => {
-  if (!search.value) return assignments.value;
-  const q = search.value.toLowerCase();
-  return assignments.value.filter(a => 
-    `${a.firstName} ${a.lastName}`.toLowerCase().includes(q) ||
-    a.nif.toLowerCase().includes(q)
-  );
+  let result = [...assignments.value];
+
+  // FILTRO DE ESTADO
+  if (filterStatus.value === 'Asignados') {
+    result = result.filter(a => a.assigned)
+  } else if (filterStatus.value === 'No asignados') {
+    result = result.filter(a => !a.assigned)
+  }
+
+  return result.sort((a, b) => {
+    const valA = sortBy.value === 'name' ? `${a.firstName} ${a.lastName}` : a.email;
+    const valB = sortBy.value === 'name' ? `${b.firstName} ${b.lastName}` : b.email;
+    return sortOrder.value === 'asc' ? valA.localeCompare(valB) : valB.localeCompare(valA);
+  });
 });
 
 const init = async () => {
   try {
-    const response = await api.get("/projects");
-    projects.value = response.data.content || response.data;
+    projects.value = await projectService.getAll(false)
   } catch (e) {
     toast.error("Error al recuperar catálogo de proyectos");
   }
 };
 
+/**
+ * Trae del servidor los empleados y si están asignados al proyecto que hemos elegido.
+ */
 const fetchAssignments = async () => {
   if (!selectedProject.value) return;
   loading.value = true;
   try {
-    const res = await api.get(`/projects/${selectedProject.value}/employees`);
-    assignments.value = res.data.content || res.data;
+    assignments.value = await assignmentService.getByProject(selectedProject.value)
   } catch (e) {
     toast.error("Error al sincronizar estado de asignaciones");
   } finally {
@@ -155,14 +220,17 @@ const fetchAssignments = async () => {
   }
 };
 
+/**
+ * Asigna o quita a un empleado del proyecto y actualiza la lista.
+ */
 const toggleAssignment = async (employee, shouldAssign) => {
   processingId.value = employee.idEmployee;
   try {
     if (shouldAssign) {
-      await api.put(`/projects/${selectedProject.value}/employees/${employee.idEmployee}`);
+      await assignmentService.assign(selectedProject.value, employee.idEmployee)
       toast.success("Asignación confirmada");
     } else {
-      await api.delete(`/projects/${selectedProject.value}/employees/${employee.idEmployee}`);
+      await assignmentService.unassign(selectedProject.value, employee.idEmployee)
       toast.success("Asignación revocada");
     }
     await fetchAssignments();
@@ -172,11 +240,6 @@ const toggleAssignment = async (employee, shouldAssign) => {
     processingId.value = null;
   }
 };
-
-const formatDate = (date) => {
-  if (!date) return '—'
-  return new Date(date).toLocaleDateString('es-ES')
-}
 
 onMounted(init);
 </script>
@@ -200,13 +263,17 @@ onMounted(init);
   display: flex;
   flex-direction: column;
   gap: 16px;
+  position: relative;
+  z-index: 10;
+}
+
+.control-area-elite:focus-within, 
+.control-area-elite:has(.is-open) {
+  z-index: 10001;
 }
 
 .project-selector-wrapper {
-  background: rgba(255, 255, 255, 0.4);
-  border-bottom: 1px solid rgba(15, 23, 42, 0.05);
-  padding: 4px 16px;
-  border-radius: 12px;
+  margin-top: 8px;
 }
 
 .f-tabular { font-variant-numeric: tabular-nums; }
@@ -215,9 +282,10 @@ onMounted(init);
 /* GRID SISTÉMICO PARA ASIGNACIONES */
 .assignment-grid {
   display: grid;
-  grid-template-columns: 1fr 150px 80px;
-  gap: 16px;
+  grid-template-columns: 1fr 120px;
+  gap: 12px;
   align-items: center;
+  width: 100%;
 }
 
 /* EMPTY STATE ELITE */
@@ -239,4 +307,63 @@ onMounted(init);
   margin: 0 auto 16px;
 }
 .empty-icon { width: 32px; height: 32px; color: rgb(var(--v-theme-on-surface)); opacity: 0.3; }
+
+.sort-divider { color: #CBD5E1; font-size: 10px; }
+
+/* CRYSTAL ACTION PILL - ESTILIZACIÓN ULTRA-FINA */
+.crystal-action-pill {
+  padding: 2px 10px;
+  border-radius: 40px;
+  background: transparent;
+  border: 1px solid rgba(15, 23, 42, 0.04);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.pill-content {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-family: 'Inter', sans-serif;
+  font-size: 8.5px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  color: #94A3B8;
+  text-transform: uppercase;
+}
+
+.pill-icon {
+  width: 10px;
+  height: 10px;
+  stroke-width: 2px;
+}
+
+.crystal-action-pill:hover {
+  border-color: #CBD5E1;
+  background: rgba(15, 23, 42, 0.01);
+}
+
+.crystal-action-pill.is-active {
+  border-color: rgba(30, 64, 175, 0.15);
+  background: rgba(30, 64, 175, 0.02);
+}
+
+.crystal-action-pill.is-active .pill-content {
+  color: #1E40AF;
+}
+
+.crystal-action-pill.is-loading {
+  opacity: 0.5;
+  pointer-events: none;
+  animation: pill-pulse 1.5s infinite;
+}
+
+@keyframes pill-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.97); }
+  100% { transform: scale(1); }
+}
 </style>

@@ -110,9 +110,10 @@ public class EmployeeService {
     }
 
     /**
-     * Ejecuta la baja lógica del empleado tras verificar la ausencia de proyectos activos.
-     * @param id ID del empleado a desactivar.
-     * @throws BusinessException Si el empleado tiene asignaciones pendientes.
+     * Da de baja a un empleado de forma lógica.
+     * No podemos darlo de baja si todavía tiene proyectos asignados.
+     * @param id ID del empleado.
+     * @throws BusinessException Si el empleado todavía tiene proyectos activos.
      */
     @Transactional
     public void deactivateEmployee(Integer id) {
@@ -172,6 +173,10 @@ public class EmployeeService {
         }
     }
 
+    /**
+     * Comprueba que no se estén intentando cambiar campos que son fijos.
+     * Por normativa, el NIF y la fecha de alta no se pueden modificar una vez creados.
+     */
     private void validateImmutableFields(Integer id, EmployeeDTO dto, Employee current) {
         if (dto.getIdEmployee() != null && !Objects.equals(id, dto.getIdEmployee())) {
             throw new BusinessException("Error: Discrepancia en identificadores de recurso.");

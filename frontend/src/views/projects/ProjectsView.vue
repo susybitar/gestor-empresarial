@@ -32,12 +32,12 @@
           
           <div class="aside-stats-stack">
             <div class="aside-stat-item">
-              <span class="text-label">Proyectos Activos</span>
-              <span class="text-primary f-tabular">{{ projects.length }}</span>
+              <span class="stat-label">Proyectos Activos</span>
+              <span class="stat-value-aside f-tabular">{{ projects.length }}</span>
             </div>
             <div class="aside-stat-item">
-              <span class="text-label">Sedes Operativas</span>
-              <span class="text-primary f-tabular">{{ uniqueLocationsCount }}</span>
+              <span class="stat-label">Sedes Operativas</span>
+              <span class="stat-value-aside f-tabular">{{ uniqueLocationsCount }}</span>
             </div>
           </div>
         </div>
@@ -52,9 +52,28 @@
         <!-- NAKED LIST CONTAINER -->
         <div class="naked-list-container animate-in delay-1">
           <div class="list-header-minimal project-grid px-8 pb-4">
-            <div class="text-label">Identificación de Proyecto</div>
-            <div class="text-label text-right">Inicio</div>
-            <div class="text-label text-right">Cierre</div>
+            <EliteSortLink 
+              label="PROYECTO" 
+              :active="sortBy === 'description'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('description')" 
+            />
+            
+            <EliteSortLink 
+              label="INICIO" 
+              align="right"
+              :active="sortBy === 'startDate'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('startDate')" 
+            />
+            
+            <EliteSortLink 
+              label="CIERRE" 
+              align="right"
+              :active="sortBy === 'endDate'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('endDate')" 
+            />
             <div class="text-label"></div>
           </div>
 
@@ -108,36 +127,47 @@
     </div>
 
     <!-- DIÁLOGO DE CESE ELITE -->
-    <v-dialog v-model="confirmDialog.show" max-width="440" persistent scrim="rgba(15, 23, 42, 0.4)">
-      <v-card class="pa-6" rounded="xl">
-        <v-card-title class="px-0 pt-0 pb-2 font-weight-bold text-h6">
-          Eliminar proyecto
-        </v-card-title>
-
-        <v-card-text class="px-0 py-4 text-body-2">
+    <v-dialog v-model="confirmDialog.show" max-width="360" persistent scrim="rgba(15, 23, 42, 0.4)">
+      <CrystalCard class="pa-6" :hoverable="false">
+        <h2 class="text-h6 font-weight-bold mb-6">Eliminar proyecto</h2>
+        
+        <p class="mb-4" style="font-size: 14px; color: #475569;">
           Esta acción eliminará permanentemente <strong>{{ confirmDialog.projectName }}</strong>.
-          <br><span class="font-weight-bold mt-2 d-block">Esta acción no se puede deshacer.</span>
-        </v-card-text>
+        </p>
 
-        <v-card-actions class="px-0 pt-4 pb-0 justify-end">
-          <v-btn variant="text" class="btn-f-base" @click="confirmDialog.show = false">
+        <div class="f-toast-error mb-8">
+          <AlertTriangle :size="14" />
+          <span>Esta acción no se puede deshacer.</span>
+        </div>
+
+        <div class="d-flex justify-end gap-2">
+          <v-btn 
+            variant="text" 
+            class="btn-f-base btn-confirm text-secondary" 
+            @click="confirmDialog.show = false"
+          >
             Cancelar
           </v-btn>
-          <v-btn color="error" variant="flat" class="btn-f-base" @click="handleDelete">
+          <v-btn 
+            variant="flat" 
+            class="btn-destructive-tonal btn-confirm" 
+            @click="handleDelete"
+          >
             Eliminar
           </v-btn>
-        </v-card-actions>
-      </v-card>
+        </div>
+      </CrystalCard>
     </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { Users, Plus, Edit3, UserMinus, ChevronUp, ChevronDown, RefreshCw } from 'lucide-vue-next'
+import { Users, Plus, Edit3, UserMinus, RefreshCw, AlertTriangle } from 'lucide-vue-next'
 import CrystalCard from '@/components/common/CrystalCard.vue'
 import EliteSearch from '@/components/common/EliteSearch.vue'
+import EliteSortLink from '@/components/common/EliteSortLink.vue'
 import { projectService } from '@/services/projectService'
 import { toast } from '@/services/toastService'
 
@@ -185,6 +215,8 @@ const loadMore = () => {
   visibleCount.value += 10
 }
 
+watch(search, () => { visibleCount.value = 10 })
+
 const toggleSort = (key) => {
   if (sortBy.value === key) sortDesc.value = !sortDesc.value
   else { sortBy.value = key; sortDesc.value = false }
@@ -204,7 +236,7 @@ const handleDelete = async () => {
     toast.success('Proyecto eliminado correctamente')
   } catch (e) {
     confirmDialog.show = false
-    toast.error('Error al eliminar el proyecto')
+    toast.error(e.response?.data?.message || 'Error al eliminar el proyecto')
   }
 }
 
@@ -251,11 +283,14 @@ onMounted(async () => {
 }
 .list-row-naked-crystal:hover .row-actions-floating { opacity: 1; transform: translateX(0); }
 
+.sort-divider { color: #CBD5E1; font-size: 10px; }
+
 /* GRID SISTÉMICO PARA PROYECTOS */
 .project-grid {
   display: grid;
-  grid-template-columns: 1fr 120px 120px 80px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 2.5fr) minmax(0, 1.2fr) minmax(0, 1.2fr) minmax(0, 0.8fr);
+  gap: 12px;
   align-items: center;
+  width: 100%;
 }
 </style>

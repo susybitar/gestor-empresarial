@@ -1,0 +1,34 @@
+spring:
+  datasource:
+    # Configuración de persistencia MariaDB/MySQL
+    url: jdbc:mysql://localhost:3306/practica?useSSL=false&serverTimezone=UTC&characterEncoding=UTF-8
+    username: root
+    password:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+
+  sql:
+    init:
+      # Sincronización automática de esquema y dataset de referencia
+      mode: never
+      schema-locations: classpath:db/mysql_DDL_PRACTICA.sql
+      data-locations: classpath:db/data.sql
+
+  jpa:
+    hibernate:
+      # Definición de DDL gestionada mediante scripts externos
+      ddl-auto: none
+
+    # Habilitación de auditoría de sentencias SQL
+    show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+
+server:
+  # Configuración de puerto para el despliegue
+  port: 8080
+  servlet:
+    encoding:
+      charset: UTF-8
+      force: true
+      enabled: true

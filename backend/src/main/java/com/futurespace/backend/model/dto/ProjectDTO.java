@@ -19,16 +19,16 @@ public class ProjectDTO {
     private Integer idProject;
 
     /** Descripción detallada o nombre del proyecto corporativo. */
-    @NotBlank
-    @Size(max = 125)
+    @NotBlank(message = "El nombre del proyecto es obligatorio")
+    @Size(max = 125, message = "El nombre del proyecto no puede superar los 125 caracteres")
     private String description;
 
     /** Fecha de inicio de las operaciones del proyecto. */
-    @NotNull
+    @NotNull(message = "La fecha de inicio es obligatoria")
     private LocalDate startDate;
 
     /** Fecha prevista de finalización. */
-    @NotNull
+    @NotNull(message = "La fecha de finalización es obligatoria")
     private LocalDate endDate;
 
     /** Fecha de baja técnica o cancelación (Solo lectura). */
@@ -36,12 +36,12 @@ public class ProjectDTO {
     private LocalDate terminationDate;
 
     /** Ubicación física o centro de coste asociado. */
-    @NotBlank
-    @Size(max = 30)
+    @NotBlank(message = "La ubicación del proyecto es obligatoria")
+    @Size(max = 30, message = "La ubicación no puede superar los 30 caracteres")
     private String location;
 
     /** Notas adicionales o requisitos específicos del proyecto. */
-    @NotBlank
-    @Size(max = 300)
+    @NotBlank(message = "Las observaciones son obligatorias")
+    @Size(max = 300, message = "Las observaciones no pueden superar los 300 caracteres")
     private String observations;
 }

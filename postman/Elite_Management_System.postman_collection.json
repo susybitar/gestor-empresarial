@@ -1,0 +1,610 @@
+{
+	"info": {
+		"_postman_id": "8a2f4c9b-7e1d-4f3a-92b5-c8e6a1f0d3c1",
+		"name": "Elite Management System - Entrega Final",
+		"description": "Colección completa de endpoints para el sistema de gestión de recursos y proyectos. Incluye CRUDs, lógica de negocio y casos de error.",
+		"schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+	},
+	"item": [
+		{
+			"name": "Empleados",
+			"item": [
+				{
+					"name": "Listar Empleados (Activos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Listar Todos (Incluye Inactivos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees?includeInactive=true",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							],
+							"query": [
+								{
+									"key": "includeInactive",
+									"value": "true"
+								}
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detalle Empleado",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Empleado",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status correcto\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Respuesta válida\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.idEmployee).to.exist;",
+									"    pm.expect(data.firstName).to.eql(\"Alberto\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nif\": \"12345678A\",\n    \"firstName\": \"Alberto\",\n    \"lastName\": \"Cano\",\n    \"secondLastName\": \"García\",\n    \"birthDate\": \"1990-05-15\",\n    \"phone1\": \"600123456\",\n    \"phone2\": \"910123456\",\n    \"email\": \"alberto.cano@futurespace.com\",\n    \"hireDate\": \"2024-01-10\",\n    \"maritalStatus\": \"S\",\n    \"hasUniversityEducation\": \"S\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Empleado",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"nif\": \"12345678A\",\n    \"firstName\": \"Alberto\",\n    \"lastName\": \"Cano\",\n    \"secondLastName\": \"Sánchez\",\n    \"birthDate\": \"1990-05-15\",\n    \"phone1\": \"611999888\",\n    \"phone2\": \"910123456\",\n    \"email\": \"alberto.cano@futurespace.com\",\n    \"hireDate\": \"2024-01-10\",\n    \"maritalStatus\": \"C\",\n    \"hasUniversityEducation\": \"S\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/employees/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Baja Lógica Empleado",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/employees/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"employees",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Errores",
+					"item": [
+						{
+							"name": "Error: Crear sin campos obligatorios",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Captura error 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"firstName\": \"Incompleto\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/employees",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"employees"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Error: Email con formato inválido",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"nif\": \"99999999Z\",\n    \"firstName\": \"Juan\",\n    \"lastName\": \"Pérez\",\n    \"secondLastName\": \"López\",\n    \"birthDate\": \"1985-10-20\",\n    \"phone1\": \"655443322\",\n    \"phone2\": \"912345678\",\n    \"email\": \"email_incorrecto\",\n    \"hireDate\": \"2023-05-01\",\n    \"maritalStatus\": \"S\",\n    \"hasUniversityEducation\": \"N\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/employees",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"employees"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Error: Eliminar empleado con proyectos activos",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status de error de negocio\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Mensaje de error realista\", function () {",
+											"    const data = pm.response.json();",
+											"    pm.expect(data.error).to.include(\"está asignado a\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/employees/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"employees",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Proyectos",
+			"item": [
+				{
+					"name": "Listar Proyectos (Activos)",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Detalle Proyecto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Crear Proyecto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Status creado\", function () {",
+									"    pm.response.to.have.status(201);",
+									"});",
+									"",
+									"pm.test(\"Estructura correcta\", function () {",
+									"    const data = pm.response.json();",
+									"    pm.expect(data.description).to.eql(\"Sincronización de Datos Bancarios\");",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "POST",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Sincronización de Datos Bancarios\",\n    \"startDate\": \"2024-06-01\",\n    \"endDate\": \"2025-12-31\",\n    \"location\": \"Madrid - Las Tablas\",\n    \"observations\": \"Proyecto crítico para el cierre de año.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/projects",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Actualizar Proyecto",
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"body": {
+							"mode": "raw",
+							"raw": "{\n    \"description\": \"Sincronización de Datos Bancarios - Fase 2\",\n    \"startDate\": \"2024-06-01\",\n    \"endDate\": \"2026-06-30\",\n    \"location\": \"Madrid - Las Tablas\",\n    \"observations\": \"Ampliación de plazos aprobada por dirección.\"\n}",
+							"options": {
+								"raw": {
+									"language": "json"
+								}
+							}
+						},
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Baja Lógica Proyecto",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Errores",
+					"item": [
+						{
+							"name": "Error: Crear sin descripción ni fechas",
+							"request": {
+								"method": "POST",
+								"header": [],
+								"body": {
+									"mode": "raw",
+									"raw": "{\n    \"location\": \"Desconocida\"\n}",
+									"options": {
+										"raw": {
+											"language": "json"
+										}
+									}
+								},
+								"url": {
+									"raw": "{{base_url}}/projects",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"projects"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Error: Eliminar proyecto con empleados asignados",
+							"event": [
+								{
+									"listen": "test",
+									"script": {
+										"exec": [
+											"pm.test(\"Status 400\", function () {",
+											"    pm.response.to.have.status(400);",
+											"});",
+											"",
+											"pm.test(\"Validación de mensaje\", function () {",
+											"    const data = pm.response.json();",
+											"    pm.expect(data.error).to.include(\"tiene asignado al menos un recurso\");",
+											"});"
+										],
+										"type": "text/javascript"
+									}
+								}
+							],
+							"request": {
+								"method": "DELETE",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/projects/1",
+									"host": [
+										"{{base_url}}"
+							],
+									"path": [
+										"projects",
+										"1"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		},
+		{
+			"name": "Asignaciones",
+			"item": [
+				{
+					"name": "Listar Asignaciones Global",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/assignments",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"assignments"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Estado de Asignación por Proyecto",
+					"request": {
+						"method": "GET",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1/employees",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"employees"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Asignar Empleado a Proyecto",
+					"event": [
+						{
+							"listen": "test",
+							"script": {
+								"exec": [
+									"pm.test(\"Asignación exitosa\", function () {",
+									"    pm.response.to.have.status(204);",
+									"});"
+								],
+								"type": "text/javascript"
+							}
+						}
+					],
+					"request": {
+						"method": "PUT",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1/employees/5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"employees",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Desasignar Empleado",
+					"request": {
+						"method": "DELETE",
+						"header": [],
+						"url": {
+							"raw": "{{base_url}}/projects/1/employees/5",
+							"host": [
+								"{{base_url}}"
+							],
+							"path": [
+								"projects",
+								"1",
+								"employees",
+								"5"
+							]
+						}
+					},
+					"response": []
+				},
+				{
+					"name": "Errores",
+					"item": [
+						{
+							"name": "Error: Asignar a proyecto inexistente",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/projects/999/employees/1",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"projects",
+										"999",
+										"employees",
+										"1"
+									]
+								}
+							},
+							"response": []
+						},
+						{
+							"name": "Error: Asignar empleado inexistente",
+							"request": {
+								"method": "PUT",
+								"header": [],
+								"url": {
+									"raw": "{{base_url}}/projects/1/employees/999",
+									"host": [
+										"{{base_url}}"
+									],
+									"path": [
+										"projects",
+										"1",
+										"employees",
+										"999"
+									]
+								}
+							},
+							"response": []
+						}
+					]
+				}
+			]
+		}
+	],
+	"variable": [
+		{
+			"key": "base_url",
+			"value": "http://localhost:8080"
+		}
+	]
+}

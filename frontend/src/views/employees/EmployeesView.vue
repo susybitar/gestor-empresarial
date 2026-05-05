@@ -24,12 +24,12 @@
           
           <div class="aside-stats-stack">
             <div class="aside-stat-item">
-              <span class="text-label">Personal Activo</span>
-              <span class="text-primary f-tabular">{{ employees.length }}</span>
+              <span class="stat-label">Personal Activo</span>
+              <span class="stat-value-aside f-tabular">{{ activeEmployeesCount }}</span>
             </div>
             <div class="aside-stat-item">
-              <span class="text-label">Proyectos Activos</span>
-              <span class="text-primary f-tabular">{{ activeProjectsCount }}</span>
+              <span class="stat-label">Proyectos Activos</span>
+              <span class="stat-value-aside f-tabular">{{ activeProjectsCount }}</span>
             </div>
           </div>
         </div>
@@ -44,16 +44,56 @@
         <!-- NAKED LIST CONTAINER -->
         <div class="naked-list-container animate-in delay-1">
           <div class="list-header-minimal employee-grid px-8 pb-4">
-            <div class="text-label">Información de Empleado</div>
-            <div class="text-label text-right">NIF / NIE</div>
-            <div class="text-label text-right">F. Nacimiento</div>
-            <div class="text-label text-right">Teléfono</div>
-            <div class="text-label text-center">Est. Civil</div>
-            <div class="text-label text-center">Formación</div>
+            <EliteSortLink 
+              label="EMPLEADO" 
+              :active="sortBy === 'firstName'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('firstName')" 
+            />
+            
+            <EliteSortLink 
+              label="NIF / NIE" 
+              align="right"
+              :active="sortBy === 'nif'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('nif')" 
+            />
+            
+            <EliteSortLink 
+              label="F. NACIMIENTO" 
+              align="right"
+              :active="sortBy === 'birthDate'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('birthDate')" 
+            />
+            
+            <EliteSortLink 
+              label="TELÉFONO" 
+              align="right"
+              :active="sortBy === 'phone1'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('phone1')" 
+            />
+            
+            <EliteSortLink 
+              label="EST. CIVIL" 
+              align="center"
+              :active="sortBy === 'maritalStatus'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('maritalStatus')" 
+            />
+            
+            <EliteSortLink 
+              label="FORMACIÓN" 
+              align="center"
+              :active="sortBy === 'hasUniversityEducation'" 
+              :sortDesc="sortDesc" 
+              @toggle="toggleSort('hasUniversityEducation')" 
+            />
             <div class="text-label"></div>
           </div>
 
-          <div v-if="loadingInitial" class="empty-state-elite">
+          <div v-if="loading" class="empty-state-elite">
             <RefreshCw class="icon-md spin mb-4" />
             <p>Sincronizando base de datos de capital humano...</p>
           </div>
@@ -61,9 +101,9 @@
           <div v-else class="list-body">
             <div v-for="item in displayedEmployees" :key="item.idEmployee" class="list-row-naked-crystal employee-grid align-center px-8 py-3">
               <!-- IZQUIERDA -->
-              <div class="d-flex flex-column">
-                <span class="text-primary">{{ item.firstName }} {{ item.lastName }} {{ item.secondLastName || '' }}</span>
-                <span class="text-secondary">{{ item.email }}</span>
+              <div class="d-flex flex-column" style="min-width: 0;">
+                <span class="text-primary text-truncate">{{ item.firstName }} {{ item.lastName }} {{ item.secondLastName || '' }}</span>
+                <span class="text-secondary text-truncate" style="font-size: 11px;">{{ item.email }}</span>
               </div>
 
               <!-- DERECHA -->
@@ -71,7 +111,7 @@
               <div class="text-secondary text-right f-tabular">{{ formatDate(item.birthDate) }}</div>
               <div class="text-secondary text-right f-tabular">{{ item.phone1 || '—' }}</div>
               <div class="text-secondary text-center">{{ item.maritalStatus === 'S' ? 'Soltero' : 'Casado' }}</div>
-              <div class="text-secondary text-center">{{ item.hasUniversityEducation === 'S' ? 'Univ.' : 'Básico' }}</div>
+              <div class="text-secondary text-center">{{ item.hasUniversityEducation === 'S' ? 'Si' : 'No' }}</div>
 
               <div class="col-actions">
                 <div class="row-actions-floating">
@@ -108,47 +148,59 @@
     </div>
 
     <!-- DIÁLOGO DE CESE ELITE -->
-    <v-dialog v-model="confirmDialog.show" max-width="440" persistent scrim="rgba(15, 23, 42, 0.4)">
-      <v-card class="pa-6" rounded="xl">
-        <v-card-title class="px-0 pt-0 pb-2 font-weight-bold text-h6">
-          Eliminar empleado
-        </v-card-title>
-
-        <v-card-text class="px-0 py-4 text-body-2">
+    <v-dialog v-model="confirmDialog.show" max-width="360" persistent scrim="rgba(15, 23, 42, 0.4)">
+      <CrystalCard class="pa-6" :hoverable="false">
+        <h2 class="text-h6 font-weight-bold mb-6">Eliminar empleado</h2>
+        
+        <p class="mb-4" style="font-size: 14px; color: #475569;">
           Esta acción eliminará permanentemente a <strong>{{ confirmDialog.employeeName }}</strong>.
-          <br><span class="font-weight-bold mt-2 d-block">Esta acción no se puede deshacer.</span>
-        </v-card-text>
+        </p>
 
-        <v-card-actions class="px-0 pt-4 pb-0 justify-end">
-          <v-btn variant="text" class="btn-f-base" @click="confirmDialog.show = false">
+        <div class="f-toast-error mb-8">
+          <AlertTriangle :size="14" />
+          <span>Esta acción no se puede deshacer.</span>
+        </div>
+
+        <div class="d-flex justify-end gap-2">
+          <v-btn 
+            variant="text" 
+            class="btn-f-base btn-confirm text-secondary" 
+            @click="confirmDialog.show = false"
+          >
             Cancelar
           </v-btn>
-          <v-btn color="error" variant="flat" class="btn-f-base" @click="handleTerminate">
+          <v-btn 
+            variant="flat" 
+            class="btn-destructive-tonal btn-confirm" 
+            @click="handleTerminate"
+          >
             Eliminar
           </v-btn>
-        </v-card-actions>
-      </v-card>
+        </div>
+      </CrystalCard>
     </v-dialog>
   </div>
 </template>
 
 <script setup>
-import { ref, reactive, computed, onMounted } from 'vue'
+import { ref, reactive, computed, onMounted, watch } from 'vue'
 import { useRouter } from 'vue-router'
-import { UserPlus, Edit3, UserMinus, ChevronUp, ChevronDown, RefreshCw, Plus } from 'lucide-vue-next'
+import { UserPlus, Edit3, UserMinus, RefreshCw, AlertTriangle } from 'lucide-vue-next'
 import CrystalCard from '@/components/common/CrystalCard.vue'
 import EliteSearch from '@/components/common/EliteSearch.vue'
+import EliteSortLink from '@/components/common/EliteSortLink.vue'
 import { employeeService } from '@/services/employeeService'
 import { projectService } from '@/services/projectService'
-import { toast } from '@/services/toastService'
+import { toast } from '@/services/toastService';
 
 const router = useRouter()
 const employees = ref([])
+const activeEmployeesCount = ref(0)
 const activeProjectsCount = ref(0)
 const search = ref('')
 const sortBy = ref('firstName')
 const sortDesc = ref(false)
-const loadingInitial = ref(true)
+const loading = ref(true)
 const visibleCount = ref(10)
 
 // Estado del Diálogo de Confirmación
@@ -197,6 +249,8 @@ const loadMore = () => {
   visibleCount.value += 10
 }
 
+watch(search, () => { visibleCount.value = 10 })
+
 const toggleSort = (key) => {
   if (sortBy.value === key) sortDesc.value = !sortDesc.value
   else { sortBy.value = key; sortDesc.value = false }
@@ -212,7 +266,9 @@ const handleTerminate = async () => {
   try {
     await employeeService.delete(confirmDialog.employeeId)
     confirmDialog.show = false
-    employees.value = await employeeService.getAll(false)
+    const allActive = await employeeService.getActive()
+    employees.value = allActive
+    activeEmployeesCount.value = allActive.length
     toast.success('Cese tramitado correctamente')
   } catch (e) {
     confirmDialog.show = false
@@ -227,17 +283,18 @@ const formatDate = (date) => {
 
 onMounted(async () => {
   try {
-    // Solo cargamos activos por defecto como se pide
-    const [empData, projData] = await Promise.all([
-      employeeService.getAll(false),
+    loading.value = true
+    const [allActive, projData] = await Promise.all([
+      employeeService.getActive(),
       projectService.getAll(false)
     ])
-    employees.value = empData
+    employees.value = allActive
+    activeEmployeesCount.value = allActive.length
     activeProjectsCount.value = projData.length
   } catch (e) {
     console.error('Error al cargar datos:', e)
   } finally {
-    loadingInitial.value = false
+    loading.value = false
   }
 })
 </script>
@@ -293,37 +350,6 @@ onMounted(async () => {
   display: block;
 }
 
-.aside-stats-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding-top: 20px;
-  border-top: 1px solid rgba(15, 23, 42, 0.05);
-}
-
-.aside-stat-item {
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-}
-
-.stat-label {
-  font-family: 'Inter', sans-serif;
-  font-size: 10px;
-  font-weight: 500;
-  color: #64748B;
-  letter-spacing: -0.03em;
-  line-height: 1;
-}
-
-.stat-value {
-  font-size: 24px;
-  font-weight: 700;
-  color: #1E293B;
-  font-family: var(--font-display);
-  letter-spacing: -0.02em;
-}
-
 .f-tabular { font-variant-numeric: tabular-nums; }
 
 .profile-main-list { display: flex; flex-direction: column; }
@@ -335,6 +361,10 @@ onMounted(async () => {
   transition: all 0.2s ease; 
   border-left: 3px solid transparent;
   border-bottom: 1px solid #E2E8F0;
+}
+
+.list-header-minimal {
+  border-left: 3px solid transparent;
 }
 
 .list-row-naked-crystal:hover { 
@@ -357,8 +387,9 @@ onMounted(async () => {
 /* GRID SISTÉMICO PARA EMPLEADOS */
 .employee-grid {
   display: grid;
-  grid-template-columns: 1fr 100px 120px 110px 90px 90px 80px;
-  gap: 16px;
+  grid-template-columns: minmax(0, 2.5fr) minmax(0, 1fr) minmax(0, 1.2fr) minmax(0, 1.1fr) minmax(0, 0.9fr) minmax(0, 0.9fr) minmax(0, 0.8fr);
+  gap: 12px;
   align-items: center;
+  width: 100%;
 }
 </style>

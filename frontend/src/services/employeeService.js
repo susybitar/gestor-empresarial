@@ -12,8 +12,13 @@ export const employeeService = {
    */
   async getAll(includeInactive = true) {
     const response = await api.get('/employees', {
-      params: { includeInactive }
+      params: { includeInactive, size: 1000 }
     })
+    return response.data.content || response.data
+  },
+
+  async getActive() {
+    const response = await api.get('/employees', { params: { includeInactive: false, size: 1000 } })
     return response.data.content || response.data
   },
 

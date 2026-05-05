@@ -52,6 +52,8 @@ export const useAuthStore = defineStore('auth', {
     logout() {
       this.user = null;
       localStorage.removeItem('fsm_user');
+      localStorage.removeItem('fsm_user_name');
+      localStorage.removeItem('fsm_user_avatar');
     }
   }
 });

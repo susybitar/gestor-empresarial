@@ -1,9 +1,14 @@
 <template>
   <CrystalCard tag="aside" :customClass="'sidebar ' + (collapsed ? 'is-collapsed' : '')" :hoverable="false">
-    <!-- Botón de plegado circular Crystal -->
+    <!-- Botón de plegado circular Crystal (Escritorio) -->
     <button class="collapse-toggle" @click="toggleCollapse" aria-label="Alternar menú">
       <ChevronLeft v-if="!collapsed" class="toggle-icon" />
       <ChevronRight v-else class="toggle-icon" />
+    </button>
+
+    <!-- Botón de cierre X (Móvil) -->
+    <button class="mobile-close" @click="$emit('close-mobile')" aria-label="Cerrar menú">
+      <X class="icon-md" />
     </button>
 
     <!-- Brand -->
@@ -70,15 +75,15 @@
 import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import api from '@/plugins/axios'
+import { employeeService } from '@/services/employeeService'
 import CrystalCard from '@/components/common/CrystalCard.vue'
 import { 
   LayoutDashboard, Users, Briefcase, FileText, User, LogOut,
-  ChevronLeft, ChevronRight
+  ChevronLeft, ChevronRight, X
 } from 'lucide-vue-next'
 
 const props = defineProps({ collapsed: Boolean })
-const emit = defineEmits(['update:collapsed'])
+const emit = defineEmits(['update:collapsed', 'close-mobile'])
 const router = useRouter()
 const route = useRoute()
 const authStore = useAuthStore()
@@ -117,9 +122,8 @@ const loadProfile = async () => {
   userAvatar.value = localStorage.getItem('fsm_user_avatar') || ''
 
   try {
-    const res = await api.get('/employees')
-    const employees = res.data.content || res.data
-    const me = employees.find(e => e.email === authStore.user?.email) || employees[0]
+    const employees = await employeeService.getAll(false)
+    const me = employees.find(e => e.email === authStore.user?.email)
     if (me) {
       userName.value = `${me.firstName} ${me.lastName}`
       localStorage.setItem('fsm_user_name', userName.value)
@@ -152,9 +156,12 @@ onUnmounted(() => {
 
 <style scoped>
 .sidebar {
-  width: 260px; display: flex; flex-direction: column; z-index: 100;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  z-index: 100;
   transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
-  position: fixed; top: 20px; left: 20px; bottom: 20px;
 }
 
 .sidebar:hover {
@@ -194,7 +201,39 @@ onUnmounted(() => {
   transform: scale(1.1);
 }
 
+@media (max-width: 1024px) {
+  .collapse-toggle {
+    display: none !important;
+  }
+}
+
 .toggle-icon { width: 16px; height: 16px; }
+
+.mobile-close {
+  display: none;
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  display: none; /* Se activa en media query */
+  align-items: center;
+  justify-content: center;
+  color: #1E40AF;
+  cursor: pointer;
+  z-index: 101;
+}
+
+@media (max-width: 1024px) {
+  .sidebar {
+    width: 280px !important; /* Forzamos ancho en móvil */
+  }
+  .mobile-close {
+    display: flex !important;
+  }
+}
 
 .nav { padding: 0 16px; flex: 1; overflow-y: auto; scrollbar-width: none; }
 .nav::-webkit-scrollbar { display: none; }
@@ -212,13 +251,14 @@ onUnmounted(() => {
 .nav-item.is-active { 
   background: linear-gradient(90deg, rgba(30, 64, 175, 0.08) 0%, rgba(255, 255, 255, 0) 100%);
   color: #1E40AF; font-weight: 700;
+  border: none !important;
 }
 .nav-icon { width: 18px; height: 18px; }
 
 .user-profile-wrapper { margin-top: auto; padding: 24px 16px; position: relative; }
 .user-profile {
-  width: 100%; display: flex; align-items: center; gap: 10px; background: rgba(255, 255, 255, 0.4); 
-  border: 1px solid rgba(255, 255, 255, 0.5); padding: 10px; border-radius: 16px; cursor: pointer;
+  width: 100%; display: flex; align-items: center; gap: 10px; background: transparent !important; 
+  border: none !important; box-shadow: none !important; padding: 10px; border-radius: 16px; cursor: pointer;
   transition: all 0.3s;
 }
 .user-profile:hover { background: white; box-shadow: 0 10px 25px rgba(0,0,0,0.05); }

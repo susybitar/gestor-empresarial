@@ -13,12 +13,12 @@
           class="btn-f-base btn-f-outline"
           @click="$router.push('/employees')"
         >
-          <Users class="icon-sm mr-2" />
+          <UserPlus class="icon-sm mr-2" />
           Alta Empleados
         </button>
         
         <button 
-          class="btn-f-base btn-f-solid"
+          class="btn-f-base btn-f-primary"
           @click="$router.push('/projects')"
         >
           <Plus class="icon-sm mr-2" />
@@ -59,9 +59,10 @@
 
 <script setup>
 import { ref, reactive, computed, onMounted } from 'vue'
-import api from '@/plugins/axios'
-import { Users, Plus, Briefcase, Activity } from 'lucide-vue-next'
+import { fetchDashboardData } from '@/services/dashboardService'
+import { UserPlus, Users, Plus, Briefcase, Activity } from 'lucide-vue-next'
 import { useAuthStore } from '@/stores/auth'
+import { toast } from '@/services/toastService'
 import StatCard from '@/components/dashboard/StatCard.vue'
 import ChartArea from '@/components/dashboard/ChartArea.vue'
 import DataFeed from '@/components/dashboard/DataFeed.vue'
@@ -75,12 +76,6 @@ const latestProjects = ref([])
 
 const statistics = reactive({ employees: 0, projects: 0, occupancy: 0, universityRatio: 0 })
 
-const currentDate = computed(() => {
-  return new Intl.DateTimeFormat('es-ES', { 
-    weekday: 'long', day: 'numeric', month: 'long' 
-  }).format(new Date()).replace(/^\w/, (c) => c.toUpperCase())
-})
-
 const greeting = computed(() => {
   const hour = new Date().getHours()
   if (hour < 12) return 'Buenos días'
@@ -88,21 +83,22 @@ const greeting = computed(() => {
   return 'Buenas noches'
 })
 
+/**
+ * Prepara las métricas que vamos a mostrar en las tarjetas (KPIs).
+ * Calculamos el porcentaje de universitarios y la ocupación en base a los datos.
+ */
 const kpiMetrics = computed(() => [
   { label: 'Empleados', value: statistics.employees, accent: '#64748B', icon: Users, trendLabel: `${statistics.universityRatio}% Universitarios` },
   { label: 'Proyectos', value: statistics.projects, accent: '#64748B', icon: Briefcase, trendLabel: 'Vigentes' },
   { label: 'Ocupación', value: statistics.occupancy, suffix: '%', accent: '#64748B', icon: Activity, trendLabel: 'Asignación activa' }
 ])
 
+/**
+ * Carga todos los datos necesarios para el dashboard y calcula las estadísticas.
+ */
 const sync = async () => {
   try {
-    const [emp, proj, assign] = await Promise.all([
-      api.get('/employees'), api.get('/projects'), api.get('/assignments')
-    ])
-    
-    const employees = emp.data.content || emp.data
-    const projects = proj.data.content || proj.data
-    const assignments = assign.data.content || assign.data
+    const { employees, projects, assignments } = await fetchDashboardData()
 
     const activeE = employees.filter(e => !e.terminationDate)
     const activeP = projects.filter(p => !p.terminationDate)
@@ -117,7 +113,7 @@ const sync = async () => {
     // Histórico de proyectos
     const currentMonth = new Date().getMonth()
     const monthlyCounts = new Array(6).fill(0)
-    projects.forEach(p => {
+    activeP.forEach(p => {
       const pDate = new Date(p.startDate)
       const diff = currentMonth - pDate.getMonth()
       if (diff >= 0 && diff < 6) monthlyCounts[5 - diff]++
@@ -134,7 +130,10 @@ const sync = async () => {
     latestProjects.value = activeP.slice(0, 4).map(p => ({
       idProject: p.idProject, projectName: p.description, location: p.location
     }))
-  } catch (e) { console.error('[Dashboard] Error Sync:', e) }
+  } catch (e) {
+    console.error('[Dashboard] Error Sync:', e)
+    toast.error('Error al cargar el panel de control')
+  }
 }
 
 onMounted(sync)
@@ -142,8 +141,6 @@ onMounted(sync)
 
 <style scoped>
 .aura { position: fixed; border-radius: 50%; filter: blur(120px); z-index: -1; opacity: 0.15; pointer-events: none; }
-.aura-2 { width: 500px; height: 500px; background: radial-gradient(circle, #10B981, transparent); bottom: -100px; left: -100px; }
-
 .aura-2 { width: 500px; height: 500px; background: radial-gradient(circle, #10B981, transparent); bottom: -100px; left: -100px; }
 
 .f-kpi-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 32px; }

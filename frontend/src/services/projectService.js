@@ -12,7 +12,7 @@ export const projectService = {
    */
   async getAll(includeInactive = true) {
     const response = await api.get('/projects', {
-      params: { includeInactive }
+      params: { includeInactive, size: 1000 }
     })
     return response.data.content || response.data
   },

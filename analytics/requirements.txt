@@ -1,6 +1,6 @@
-pandas
-mysql-connector-python
-plotly
-sqlalchemy
-nbformat
-ipykernel
+pandas>=2.0.0
+matplotlib>=3.7.0
+seaborn>=0.12.0
+sqlalchemy>=2.0.0
+mysql-connector-python>=8.0.0
+numpy>=1.24.0

@@ -100,7 +100,10 @@ public class AuthService {
         User user = userRepository.findByEmail(email)
                 .orElseThrow(() -> new BusinessException("Usuario no encontrado"));
 
-        // CRÍTICO: Hasheamos la nueva contraseña cumpliendo las mismas reglas
+        if (!passwordEncoder.matches(dto.getCurrentPassword(), user.getPassword())) {
+            throw new BusinessException(INVALID_CREDENTIALS_MESSAGE);
+        }
+
         user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
         userRepository.save(user);
 

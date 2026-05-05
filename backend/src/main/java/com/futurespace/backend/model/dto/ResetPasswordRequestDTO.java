@@ -17,6 +17,9 @@ public class ResetPasswordRequestDTO {
     @Pattern(regexp = "^[A-Za-z0-9._%+-]+@futurespace\\.com$", message = "Solo se permiten correos corporativos @futurespace.com")
     private String email;
 
+    @NotBlank(message = "La contraseña actual es obligatoria")
+    private String currentPassword;
+
     @NotBlank(message = "La nueva contraseña es obligatoria")
     @Size(min = 8, message = "La contraseña debe tener al menos 8 caracteres")
     @Pattern(
