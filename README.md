@@ -75,18 +75,41 @@ visualizaciones interactivas dentro de un Jupyter Notebook.
 
 ## Puesta en Marcha
 
-El sistema requiere **Node.js 18+**, **Java 17** y **Python 3.11+**.
+### Con Docker (recomendado)
 
-### Backend
+Requiere únicamente **Docker Desktop**. Levanta MySQL, backend y frontend con un solo comando:
 
 ```bash
-# Configurar src/main/resources/application.properties con las credenciales MySQL
+docker-compose up --build
+```
+
+| Servicio  | URL                        |
+|-----------|----------------------------|
+| Frontend  | http://localhost:5173       |
+| Backend   | http://localhost:8080       |
+| MySQL     | localhost:3307              |
+
+La primera ejecución descarga imágenes y compila el proyecto (~3-5 min).
+Las siguientes arrancan en segundos.
+
+Para detener: `docker-compose down`
+Para detener y borrar datos: `docker-compose down -v`
+
+---
+
+### Manual (sin Docker)
+
+El sistema requiere **Node.js 18+**, **Java 17** y **Python 3.11+**.
+
+#### Backend
+
+```bash
 cd backend
 ./mvnw spring-boot:run
 # API disponible en http://localhost:8080
 ```
 
-### Frontend
+#### Frontend
 
 ```bash
 cd frontend
@@ -95,14 +118,14 @@ npm run dev
 # App disponible en http://localhost:5173
 ```
 
-### Analytics
+#### Analytics
 
 ```bash
 cd analytics
 python -m venv .venv
 .venv\Scripts\activate          # Windows
 pip install -r requirements.txt
-# Abrir data_analitycs.ipynb en VS Code o Jupyter
+# Abrir data_analytics.ipynb en VS Code o Jupyter
 ```
 
 ---
